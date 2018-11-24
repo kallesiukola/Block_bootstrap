@@ -1,0 +1,41 @@
+t_max <- 2000
+alpha <- 0.9
+m = 500
+n = 1501
+l = 10
+k = floor((n - m + 1)/l)
+theta <- 0.75
+initial_value = 2
+df <- 5 
+is_in_internval <- vector()
+for (count in 1:10000) {
+  time_serie <- vector()
+  time_serie[1] <- initial_value
+  for (t in 2:t_max) {
+    residual = rt(1, df, 0)
+    time_serie[t] = theta * time_serie[t - 1] + residual
+  }
+  theta_estimate = arima(time_serie, order=c(1,0,0))$coef[[1]]
+  blocks <- list()
+  for (t in m:n) {
+    blocks[[t-m + 1]] = time_serie[t - m + 1:t]
+  }
+  samples <- sample(1:(n - m - l), k, TRUE)
+  boots <- vector()
+  counter = 1
+  for (i in 1:k) {
+    for (j in 1:l) {
+      subserie <- blocks[[samples[i] + j]]
+      boots[counter] = arima(subserie, order=c(1,0,0))$coef[[1]]
+      counter = counter + 1
+    }
+  }
+  boots <- sort(boots)
+  lower_limit <- boots[floor((1 - alpha)/2 * (n - m - 1)) + 1]
+  upper_limit <- boots[floor((1 + alpha)/2 * (n - m - 1))]
+  if (theta < upper_limit && theta > lower_limit) {
+    is_in_internval[count] = 1
+  }else {
+    is_in_internval[count] = 0
+  }
+}
