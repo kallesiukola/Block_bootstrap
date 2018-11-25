@@ -67,4 +67,5 @@ for (count in 1:iterations) {
 }
 
 sum(is_in_internval)/length(is_in_internval)
-#Katso kuuluuko oikea parameri kohdan 3 luottamusvälille
+
+hist(boots, breaks = 25, xlim = 0:1)
