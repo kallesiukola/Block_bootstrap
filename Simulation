@@ -1,41 +1,70 @@
-t_max <- 2000
+iterations <- 100
+#The length of time serie
+t_max <- 200
+
+#The significance level
 alpha <- 0.9
-m = 500
-n = 1501
+
+#Start of observation
+m = 50
+
+#End of observetion
+n = 151
+
+#The length of the block
 l = 10
+
+#Number of blocks
 k = floor((n - m + 1)/l)
-theta <- 0.75
-initial_value = 2
-df <- 5 
+
+#AR(1) model parameter
+theta <- 0.5
+
+#Initial value for time serie (X_1)
+initial_value = 1
+
+# t distribution parameter
+df <- 10 
+
+#Keep a record of matches
 is_in_internval <- vector()
-for (count in 1:10000) {
+
+for (count in 1:iterations) {
+  #Simulate AR(1) time serie
   time_serie <- vector()
+  
   time_serie[1] <- initial_value
+
   for (t in 2:t_max) {
     residual = rt(1, df, 0)
     time_serie[t] = theta * time_serie[t - 1] + residual
   }
-  theta_estimate = arima(time_serie, order=c(1,0,0))$coef[[1]]
-  blocks <- list()
-  for (t in m:n) {
-    blocks[[t-m + 1]] = time_serie[t - m + 1:t]
-  }
-  samples <- sample(1:(n - m - l), k, TRUE)
+  
+  #Generate block starting points from uniformal distribution with replacement
+  samples <- sample((m - 1):(n - l), k, replace = TRUE)
   boots <- vector()
+
   counter = 1
+
   for (i in 1:k) {
     for (j in 1:l) {
-      subserie <- blocks[[samples[i] + j]]
+      subserie <- time_serie[(samples[i] - m + 1 + j):(samples[i] + j)]
       boots[counter] = arima(subserie, order=c(1,0,0))$coef[[1]]
       counter = counter + 1
     }
   }
+  #Sort bootstrap values
   boots <- sort(boots)
   lower_limit <- boots[floor((1 - alpha)/2 * (n - m - 1)) + 1]
   upper_limit <- boots[floor((1 + alpha)/2 * (n - m - 1))]
+
   if (theta < upper_limit && theta > lower_limit) {
     is_in_internval[count] = 1
   }else {
     is_in_internval[count] = 0
   }
+
 }
+
+sum(is_in_internval)/length(is_in_internval)
+#Katso kuuluuko oikea parameri kohdan 3 luottamusvälille
