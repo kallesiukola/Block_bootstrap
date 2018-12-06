@@ -11,6 +11,17 @@ gemerate_time_serie <- function(t_max, theta, df, initial_value){
   
 }
 
+generate_time_serie_ma <- function(t_max, theta, df) {
+  time_serie <- vector()
+  residual <- rt(1, df, 0)
+  for (t in 1:t_max) {
+    old_residual <- residual
+    residual <- rt(1, df, 0)
+    time_serie[t] = residual + theta * old_residual
+  }
+  return(time_serie)
+}
+
 #Returns the confidence intervals for theta parameter using bootstrap algorithm
 block_bootstrap <- function(t_max, alpha, l, k, time_serie) {
   samples <- sample(0:(t_max - l), k, replace = TRUE)
